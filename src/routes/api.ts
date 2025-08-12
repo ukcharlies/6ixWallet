@@ -1,11 +1,76 @@
 import { Router } from "express";
+import { z } from "zod";
 import AuthController from "../controllers/auth.controller";
 import WalletController from "../controllers/wallet.controller";
+import authMiddleware from "../middlewares/auth.middleware";
+import { validate } from "../middlewares/validation.middleware";
 
 const router = Router();
 
-router.post("/auth/register", AuthController.register);
-// protected routes need auth middleware
-router.post("/wallet/transfer", WalletController.transfer);
+// Validation schemas
+const registerSchema = z.object({
+  body: z.object({
+    email: z.string().email(),
+    password: z.string().min(8),
+    phone: z.string().optional(),
+  }),
+});
+
+const loginSchema = z.object({
+  body: z.object({
+    email: z.string().email(),
+    password: z.string(),
+  }),
+});
+
+const transferSchema = z.object({
+  body: z.object({
+    toUserId: z.string().uuid(),
+    amount: z.number().positive(),
+    reference: z.string(),
+  }),
+});
+
+const fundSchema = z.object({
+  body: z.object({
+    amount: z.number().positive(),
+    reference: z.string(),
+    description: z.string().optional(),
+  }),
+});
+
+const withdrawSchema = z.object({
+  body: z.object({
+    amount: z.number().positive(),
+    reference: z.string(),
+  }),
+});
+
+// Auth routes
+router.post(
+  "/auth/register",
+  validate(registerSchema),
+  AuthController.register
+);
+router.post("/auth/login", validate(loginSchema), AuthController.login);
+
+// Dev-only route
+router.post("/dev/check-blacklist", AuthController.checkBlacklist);
+
+// Protected wallet routes
+router.use("/wallet", authMiddleware);
+router.get("/wallet", WalletController.getWallet);
+router.post("/wallet/fund", validate(fundSchema), WalletController.fund);
+router.post(
+  "/wallet/transfer",
+  validate(transferSchema),
+  WalletController.transfer
+);
+router.post(
+  "/wallet/withdraw",
+  validate(withdrawSchema),
+  WalletController.withdraw
+);
+router.get("/wallet/transactions", WalletController.getTransactions);
 
 export default router;
