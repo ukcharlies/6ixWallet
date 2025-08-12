@@ -6,6 +6,8 @@ exports.up = function (knex) {
       table.string("phone").nullable();
       table.string("password_hash").notNullable();
       table.timestamps(true, true);
+      table.timestamp("created_at").defaultTo(knex.fn.now());
+      table.timestamp("updated_at").defaultTo(knex.fn.now());
     })
     .createTable("wallets", (table) => {
       table.uuid("id").primary();
@@ -17,6 +19,8 @@ exports.up = function (knex) {
         .onDelete("CASCADE");
       table.bigInteger("balance").notNullable().defaultTo(0);
       table.timestamps(true, true);
+      table.timestamp("created_at").defaultTo(knex.fn.now());
+      table.timestamp("updated_at").defaultTo(knex.fn.now());
     })
     .createTable("transactions", (table) => {
       table.uuid("id").primary();
