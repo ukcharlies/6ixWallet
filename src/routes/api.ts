@@ -10,6 +10,7 @@ const router = Router();
 // Validation schemas
 const registerSchema = z.object({
   body: z.object({
+    name: z.string().min(1, "Name is required"),
     email: z.string().email(),
     password: z.string().min(8),
     phone: z.string().optional(),

@@ -5,7 +5,12 @@ import jwt from "jsonwebtoken";
 import config from "../config";
 import fetch from "node-fetch";
 
-type RegisterPayload = { email: string; password: string; phone?: string };
+type RegisterPayload = {
+  name: string;
+  email: string;
+  password: string;
+  phone?: string;
+};
 type LoginPayload = { email: string; password: string };
 
 export default class AuthService {
@@ -53,7 +58,7 @@ export default class AuthService {
   }
 
   static async register(payload: RegisterPayload) {
-    // Check blacklist
+    // Check blacklist first - moved to beginning to ensure check happens before any DB operations
     const isBlacklisted = await AuthService.checkAdjutorBlacklist(
       "email",
       payload.email
@@ -69,6 +74,7 @@ export default class AuthService {
     await db.transaction(async (trx) => {
       await trx("users").insert({
         id,
+        name: payload.name,
         email: payload.email,
         phone: payload.phone || null,
         password_hash: passwordHash,
@@ -79,7 +85,7 @@ export default class AuthService {
     const token = jwt.sign({ userId: id }, config.jwtSecret, {
       expiresIn: "7d",
     });
-    return { user: { id, email: payload.email }, token };
+    return { user: { id, name: payload.name, email: payload.email }, token };
   }
 
   static async login(payload: LoginPayload) {

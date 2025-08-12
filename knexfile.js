@@ -4,11 +4,11 @@ module.exports = {
   development: {
     client: "mysql2",
     connection: {
-      host: process.env.DB_HOST || "127.0.0.1",
+      host: process.env.DB_HOST || "localhost",
       port: process.env.DB_PORT || 3306,
-      user: process.env.DB_USER || "demo_user",
-      password: process.env.DB_PASSWORD || "demo_pass",
-      database: process.env.DB_NAME || "demo_wallet",
+      user: process.env.DB_USER || "6ixthedev",
+      password: process.env.DB_PASSWORD || "p@ssw0rd",
+      database: process.env.DB_NAME || "6ixwallet",
     },
     migrations: {
       directory: "./migrations",
@@ -20,11 +20,11 @@ module.exports = {
   test: {
     client: "mysql2",
     connection: {
-      host: process.env.DB_HOST || "127.0.0.1",
+      host: process.env.DB_HOST || "localhost",
       port: process.env.DB_PORT || 3306,
-      user: process.env.DB_USER || "demo_user",
-      password: process.env.DB_PASSWORD || "demo_pass",
-      database: process.env.DB_NAME_TEST || "demo_wallet_test",
+      user: process.env.DB_USER || "6ixthedev",
+      password: process.env.DB_PASSWORD || "p@ssw0rd",
+      database: process.env.DB_NAME_TEST || "6ixwallet_test",
     },
     migrations: {
       directory: "./migrations",
