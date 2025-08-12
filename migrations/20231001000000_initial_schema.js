@@ -1,3 +1,4 @@
+// migrations/20231001000000_initial_schema.js
 exports.up = function (knex) {
   return knex.schema
     .createTable("users", (table) => {
@@ -6,9 +7,11 @@ exports.up = function (knex) {
       table.string("email").notNullable().unique();
       table.string("phone").nullable();
       table.string("password_hash").notNullable();
+      // This single line creates both created_at and updated_at columns
       table.timestamps(true, true);
-      table.timestamp("created_at").defaultTo(knex.fn.now());
-      table.timestamp("updated_at").defaultTo(knex.fn.now());
+      // Remove these duplicate timestamp declarations:
+      // table.timestamp("created_at").defaultTo(knex.fn.now());
+      // table.timestamp("updated_at").defaultTo(knex.fn.now());
     })
     .createTable("wallets", (table) => {
       table.uuid("id").primary();
