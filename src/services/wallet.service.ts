@@ -79,6 +79,16 @@ export default class WalletService {
       throw Object.assign(new Error("Amount must be > 0"), { status: 400 });
 
     return db.transaction(async (trx) => {
+      // Check for duplicate reference (idempotency)
+      const existingTransfer = await trx("transfers")
+        .join("transactions as t1", "transfers.from_transaction_id", "t1.id")
+        .where("t1.reference", reference)
+        .first();
+
+      if (existingTransfer) {
+        return existingTransfer.id;
+      }
+
       const fromWallet = await trx("wallets")
         .where({ user_id: fromUserId })
         .forUpdate()
@@ -119,12 +129,16 @@ export default class WalletService {
       const debitId = uuidv4();
       const creditId = uuidv4();
 
+      // Use unique references for each transaction by adding a suffix
+      const debitReference = `${reference}-debit`;
+      const creditReference = `${reference}-credit`;
+
       await trx("transactions").insert({
         id: debitId,
         wallet_id: fromWallet.id,
         type: "debit",
         amount,
-        reference,
+        reference: debitReference,
         description: `Transfer to ${toUserId}`,
         created_at: trx.fn.now(),
       });
@@ -134,7 +148,7 @@ export default class WalletService {
         wallet_id: toWallet.id,
         type: "credit",
         amount,
-        reference,
+        reference: creditReference,
         description: `Transfer from ${fromUserId}`,
         created_at: trx.fn.now(),
       });
