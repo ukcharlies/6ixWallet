@@ -87,4 +87,40 @@ describe("Auth API", () => {
       expect(res.status).toBe(401);
     });
   });
+
+  describe("POST /api/v1/dev/check-blacklist", () => {
+    it("should check if an email is blacklisted", async () => {
+      // Mock the implementation for development environment
+      jest
+        .spyOn(AuthService, "devCheckBlacklist")
+        .mockImplementation(async (type, value) => {
+          return value.includes("blacklisted");
+        });
+
+      const res = await request(app).post("/api/v1/dev/check-blacklist").send({
+        type: "email",
+        value: "blacklisted@example.com",
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty("isBlacklisted", true);
+    });
+
+    it("should return false for non-blacklisted email", async () => {
+      // Mock the implementation for development environment
+      jest
+        .spyOn(AuthService, "devCheckBlacklist")
+        .mockImplementation(async (type, value) => {
+          return value.includes("blacklisted");
+        });
+
+      const res = await request(app).post("/api/v1/dev/check-blacklist").send({
+        type: "email",
+        value: "normal@example.com",
+      });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty("isBlacklisted", false);
+    });
+  });
 });

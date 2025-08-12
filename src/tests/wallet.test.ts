@@ -183,4 +183,117 @@ describe("Wallet API", () => {
       expect(parseInt(senderWallet.balance)).toBeGreaterThanOrEqual(0);
     });
   });
+
+  describe("GET /wallet", () => {
+    it("should retrieve user wallet information", async () => {
+      // Fund the wallet first to ensure there's a balance
+      await request(app)
+        .post("/api/v1/wallet/fund")
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({
+          amount: 100,
+          reference: `fund-for-get-wallet-${Date.now()}`,
+        });
+
+      const res = await request(app)
+        .get("/api/v1/wallet")
+        .set("Authorization", `Bearer ${userToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty("wallet");
+      expect(res.body.wallet).toHaveProperty("balance");
+      expect(res.body.wallet.userId).toBe(userId);
+    });
+
+    it("should reject unauthenticated requests", async () => {
+      const res = await request(app).get("/api/v1/wallet");
+      expect(res.status).toBe(401);
+    });
+  });
+
+  describe("GET /wallet/transactions", () => {
+    beforeEach(async () => {
+      // Create some transactions
+      await request(app)
+        .post("/api/v1/wallet/fund")
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({
+          amount: 50,
+          reference: `fund-for-transactions-1-${Date.now()}`,
+        });
+
+      await request(app)
+        .post("/api/v1/wallet/fund")
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({
+          amount: 75,
+          reference: `fund-for-transactions-2-${Date.now()}`,
+        });
+    });
+
+    it("should retrieve transaction history", async () => {
+      const res = await request(app)
+        .get("/api/v1/wallet/transactions")
+        .set("Authorization", `Bearer ${userToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty("transactions");
+      expect(Array.isArray(res.body.transactions)).toBe(true);
+      expect(res.body.transactions.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it("should support pagination", async () => {
+      const res = await request(app)
+        .get("/api/v1/wallet/transactions?limit=1")
+        .set("Authorization", `Bearer ${userToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty("transactions");
+      expect(res.body.transactions.length).toBe(1);
+    });
+  });
+
+  describe("Wallet withdrawal", () => {
+    beforeEach(async () => {
+      // Fund wallet for withdrawals
+      await request(app)
+        .post("/api/v1/wallet/fund")
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({
+          amount: 500,
+          reference: `fund-for-withdrawal-${Date.now()}`,
+        });
+    });
+
+    it("should withdraw funds successfully", async () => {
+      const withdrawAmount = 200;
+      const res = await request(app)
+        .post("/api/v1/wallet/withdraw")
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({
+          amount: withdrawAmount,
+          reference: "withdraw-test-1",
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty("withdrawalId");
+
+      // Check wallet balance
+      const wallet = await db("wallets").where({ user_id: userId }).first();
+      expect(parseInt(wallet.balance)).toBe(toCents(500 - withdrawAmount));
+    });
+
+    it("should reject withdrawals with insufficient funds", async () => {
+      const res = await request(app)
+        .post("/api/v1/wallet/withdraw")
+        .set("Authorization", `Bearer ${userToken}`)
+        .send({
+          amount: 1000, // More than available
+          reference: "withdraw-test-2",
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe("Insufficient funds");
+    });
+  });
 });
