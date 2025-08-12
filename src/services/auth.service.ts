@@ -23,21 +23,39 @@ export default class AuthService {
         return value.includes("blacklisted");
       }
 
-      const res = await fetch(`${config.adjutor.baseUrl}/karma/lookup`, {
-        method: "POST",
+      // The curl example shows a direct path parameter, not using type/value
+      // So we'll just pass the value directly in the URL
+      const encodedValue = encodeURIComponent(value);
+      const url = `${config.adjutor.baseUrl}/${encodedValue}`;
+
+      console.log(`Making request to: ${url}`);
+
+      const res = await fetch(url, {
+        method: "GET",
         headers: {
-          "Content-Type": "application/json",
+          Accept: "application/json",
           Authorization: `Bearer ${config.adjutor.apiKey}`,
         },
-        body: JSON.stringify({ identityType: type, identityValue: value }),
       });
+
+      // Log the status and response body for debugging
+      console.log(`Adjutor API response status: ${res.status}`);
+      const responseText = await res.text();
+      console.log(`Adjutor API response body: ${responseText}`);
 
       if (!res.ok) {
         throw new Error(`Adjutor API error: ${res.status}`);
       }
 
-      type AdjutorResponse = { blacklisted: boolean };
-      const json = (await res.json()) as AdjutorResponse;
+      // Parse the response as JSON after we've logged it as text
+      const json = JSON.parse(responseText);
+
+      // Based on the curl example response format
+      const isBlacklisted =
+        json.status === "success" &&
+        json.data &&
+        json.data.karma_type &&
+        json.data.karma_type.karma === "Others"; // "Others" was the value in your example
 
       // Log blacklist check
       const logId = uuidv4();
@@ -45,11 +63,11 @@ export default class AuthService {
         id: logId,
         identity_type: type,
         identity_value: value,
-        is_blacklisted: json?.blacklisted ?? false,
+        is_blacklisted: isBlacklisted,
         created_at: db.fn.now(),
       });
 
-      return json?.blacklisted ?? false;
+      return isBlacklisted;
     } catch (error) {
       console.error("Adjutor API error:", error);
       // In case of API failure, don't block registration
