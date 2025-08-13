@@ -7,6 +7,14 @@ import AuthService from "../services/auth.service";
 describe("Auth API", () => {
   beforeAll(async () => {
     await db.migrate.latest();
+
+    // Mock the Adjutor service for all tests
+    jest.spyOn(AuthService, "checkAdjutorBlacklist").mockResolvedValue(false);
+  });
+
+  beforeEach(() => {
+    // Reset the mock before each test
+    jest.clearAllMocks();
   });
 
   afterEach(async () => {

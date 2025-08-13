@@ -1,6 +1,7 @@
 import db from "../db/knex";
 import { v4 as uuidv4 } from "uuid";
 import { toCents, fromCents } from "../utilis/money";
+import fetch from "node-fetch";
 
 export default class WalletService {
   static async getWallet(userId: string) {
