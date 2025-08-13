@@ -10,4 +10,6 @@ module.exports = {
   setupFilesAfterEnv: ["<rootDir>/src/tests/setup.js"],
   forceExit: true,
   detectOpenHandles: true,
+  // Remove the moduleNameMapper and simplify transformIgnorePatterns
+  transformIgnorePatterns: ["node_modules/(?!(node-fetch)/)"],
 };
