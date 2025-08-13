@@ -7,9 +7,11 @@ module.exports = {
   },
   testRegex: "(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$",
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
-  setupFilesAfterEnv: ["<rootDir>/src/tests/setup.js"],
+  setupFilesAfterEnv: [
+    "<rootDir>/src/tests/setup.js",
+    "<rootDir>/jest.setup.js",
+  ],
   forceExit: true,
   detectOpenHandles: true,
-  // Remove the moduleNameMapper and simplify transformIgnorePatterns
   transformIgnorePatterns: ["node_modules/(?!(node-fetch)/)"],
 };
