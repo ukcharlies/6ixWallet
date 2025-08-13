@@ -7,7 +7,7 @@ export default class WalletController {
     try {
       const userId = req.user!.userId;
       const wallet = await WalletService.getWallet(userId);
-      return res.status(200).json(wallet);
+      return res.status(200).json({ wallet }); // Wrap in wallet object
     } catch (err) {
       next(err);
     }
@@ -68,7 +68,7 @@ export default class WalletController {
 
       return res.status(200).json({
         message: "Withdrawal successful",
-        transactionId: result.transactionId,
+        withdrawalId: result.transactionId, // Change transactionId to withdrawalId
       });
     } catch (err) {
       next(err);
@@ -85,13 +85,16 @@ export default class WalletController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
 
-      const transactions = await WalletService.getTransactionHistory(
+      const result = await WalletService.getTransactionHistory(
         userId,
         page,
         limit
       );
 
-      return res.status(200).json(transactions);
+      return res.status(200).json({
+        transactions: result.data,
+        pagination: result.pagination,
+      });
     } catch (err) {
       next(err);
     }

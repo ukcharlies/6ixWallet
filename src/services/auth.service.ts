@@ -3,8 +3,7 @@ import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 import config from "../config";
-// Use a simple import with a type assertion to make TypeScript happy
-import fetch from "node-fetch";
+import fetch from "node-fetch"; // Change this line
 
 type RegisterPayload = {
   name: string;

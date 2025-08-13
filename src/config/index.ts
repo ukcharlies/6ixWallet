@@ -17,10 +17,8 @@ export default {
     port: Number(process.env.DB_PORT || 3306),
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    database:
-      process.env.NODE_ENV === "test"
-        ? process.env.DB_NAME_TEST || "6ixwallet_test"
-        : process.env.DB_NAME,
+    // For testing, just use the main database
+    database: process.env.DB_NAME || "6ixwallet",
   },
   adjutor: {
     baseUrl: process.env.ADJUTOR_BASE_URL,

@@ -24,7 +24,7 @@ module.exports = {
       port: process.env.DB_PORT || 3306,
       user: process.env.DB_USER || "6ixthedev",
       password: process.env.DB_PASSWORD || "p@ssw0rd",
-      database: process.env.DB_NAME_TEST || "6ixwallet_test",
+      database: process.env.DB_NAME || "6ixwallet",
     },
     migrations: {
       directory: "./migrations",

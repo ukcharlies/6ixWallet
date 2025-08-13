@@ -79,14 +79,13 @@ export default class WalletService {
       throw Object.assign(new Error("Amount must be > 0"), { status: 400 });
 
     return db.transaction(async (trx) => {
-      // Check for duplicate reference (idempotency)
       const existingTransfer = await trx("transfers")
         .join("transactions as t1", "transfers.from_transaction_id", "t1.id")
         .where("t1.reference", reference)
         .first();
 
       if (existingTransfer) {
-        return existingTransfer.id;
+        return { transferId: existingTransfer.id };
       }
 
       const fromWallet = await trx("wallets")
@@ -94,13 +93,15 @@ export default class WalletService {
         .forUpdate()
         .first();
 
-      if (!fromWallet)
+      if (!fromWallet) {
         throw Object.assign(new Error("Sender wallet not found"), {
           status: 404,
         });
+      }
 
-      if (BigInt(fromWallet.balance) < BigInt(amount))
+      if (BigInt(fromWallet.balance) < BigInt(amount)) {
         throw Object.assign(new Error("Insufficient funds"), { status: 400 });
+      }
 
       const toWallet = await trx("wallets")
         .where({ user_id: toUserId })

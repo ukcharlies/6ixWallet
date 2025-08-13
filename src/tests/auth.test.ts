@@ -25,6 +25,7 @@ describe("Auth API", () => {
       jest.spyOn(AuthService, "checkAdjutorBlacklist").mockResolvedValue(false);
 
       const res = await request(app).post("/api/v1/auth/register").send({
+        name: "Test User", // Add name field
         email: "test@example.com",
         password: "password123",
         phone: "1234567890",
@@ -41,7 +42,7 @@ describe("Auth API", () => {
         .where("users.email", "test@example.com");
 
       expect(wallets).toHaveLength(1);
-      expect(wallets[0].balance).toBe("0");
+      expect(String(wallets[0].balance)).toBe("0"); // Convert to string for comparison
     });
 
     it("should reject registration of blacklisted email", async () => {
@@ -49,6 +50,7 @@ describe("Auth API", () => {
       jest.spyOn(AuthService, "checkAdjutorBlacklist").mockResolvedValue(true);
 
       const res = await request(app).post("/api/v1/auth/register").send({
+        name: "Blacklisted User", // Add name field
         email: "blacklisted@example.com",
         password: "password123",
       });
@@ -61,7 +63,10 @@ describe("Auth API", () => {
   describe("POST /api/v1/auth/login", () => {
     beforeEach(async () => {
       // Create a test user
+      jest.spyOn(AuthService, "checkAdjutorBlacklist").mockResolvedValue(false);
+
       await request(app).post("/api/v1/auth/register").send({
+        name: "Login Test User",
         email: "login@example.com",
         password: "password123",
       });

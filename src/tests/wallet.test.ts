@@ -12,8 +12,9 @@ describe("Wallet API", () => {
   beforeAll(async () => {
     await db.migrate.latest();
 
-    // Create test users
+    // Create test users with name field
     const user1 = await request(app).post("/api/v1/auth/register").send({
+      name: "Wallet Test User",
       email: "wallet-test@example.com",
       password: "password123",
     });
@@ -22,6 +23,7 @@ describe("Wallet API", () => {
     userId = user1.body.user.id;
 
     const user2 = await request(app).post("/api/v1/auth/register").send({
+      name: "Second Wallet User",
       email: "wallet-test2@example.com",
       password: "password123",
     });
