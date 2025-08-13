@@ -140,31 +140,41 @@ export default class AuthService {
 
   // Dev-only endpoint for direct user creation without blacklist check
   static async createDevUser(payload: RegisterPayload) {
-    if (config.env !== "development") {
+    if (process.env.NODE_ENV !== "development") {
       throw Object.assign(
         new Error("This endpoint is only available in development mode"),
         { status: 403 }
       );
     }
 
+    // Use your existing user creation logic but skip blacklist check
     const id = uuidv4();
-    const walletId = uuidv4();
     const passwordHash = await bcrypt.hash(payload.password, 10);
 
-    await db.transaction(async (trx) => {
-      await trx("users").insert({
-        id,
-        name: payload.name,
-        email: payload.email,
-        phone: payload.phone || null,
-        password_hash: passwordHash,
+    const user = await db.transaction(async (trx) => {
+      const [user] = await trx("users")
+        .insert({
+          id,
+          name: payload.name,
+          email: payload.email,
+          password_hash: passwordHash,
+          phone: payload.phone,
+        })
+        .returning(["id", "name", "email"]);
+
+      await trx("wallets").insert({
+        id: uuidv4(),
+        user_id: id,
+        balance: 0,
       });
-      await trx("wallets").insert({ id: walletId, user_id: id, balance: 0 });
+
+      return user;
     });
 
-    const token = jwt.sign({ userId: id }, config.jwtSecret, {
+    const token = jwt.sign({ userId: id }, process.env.JWT_SECRET!, {
       expiresIn: "7d",
     });
-    return { user: { id, name: payload.name, email: payload.email }, token };
+
+    return { user, token };
   }
 }

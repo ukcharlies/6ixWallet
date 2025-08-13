@@ -4,6 +4,8 @@ import AuthController from "../controllers/auth.controller";
 import WalletController from "../controllers/wallet.controller";
 import authMiddleware from "../middlewares/auth.middleware";
 import { validate } from "../middlewares/validation.middleware";
+import AuthService from "../services/auth.service";
+import { Request, Response, NextFunction } from "express";
 
 const router = Router();
 
@@ -54,10 +56,35 @@ router.post(
   AuthController.register
 );
 router.post("/auth/login", validate(loginSchema), AuthController.login);
-
 // Dev-only route
 router.post("/dev/check-blacklist", AuthController.checkBlacklist);
-router.post("/dev/create-user", AuthController.createDevUser);
+// Implement createDevUser handler directly in the routes file
+router.post(
+  "/dev/create-user",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { name, email, password, phone } = req.body;
+      const { user, token } = await AuthService.createDevUser({
+        name,
+        email,
+        password,
+        phone,
+      });
+
+      return res.status(201).json({
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        },
+        token,
+      });
+    } catch (err) {
+      next(err);
+    }
+    WalletController.withdraw;
+  }
+);
 
 // Protected wallet routes
 router.use("/wallet", authMiddleware);
