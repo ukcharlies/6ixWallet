@@ -57,6 +57,7 @@ router.post("/auth/login", validate(loginSchema), AuthController.login);
 
 // Dev-only route
 router.post("/dev/check-blacklist", AuthController.checkBlacklist);
+router.post("/dev/create-user", AuthController.createDevUser);
 
 // Protected wallet routes
 router.use("/wallet", authMiddleware);

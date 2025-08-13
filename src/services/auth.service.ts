@@ -137,4 +137,34 @@ export default class AuthService {
     }
     return this.checkAdjutorBlacklist(type, value);
   }
+
+  // Dev-only endpoint for direct user creation without blacklist check
+  static async createDevUser(payload: RegisterPayload) {
+    if (config.env !== "development") {
+      throw Object.assign(
+        new Error("This endpoint is only available in development mode"),
+        { status: 403 }
+      );
+    }
+
+    const id = uuidv4();
+    const walletId = uuidv4();
+    const passwordHash = await bcrypt.hash(payload.password, 10);
+
+    await db.transaction(async (trx) => {
+      await trx("users").insert({
+        id,
+        name: payload.name,
+        email: payload.email,
+        phone: payload.phone || null,
+        password_hash: passwordHash,
+      });
+      await trx("wallets").insert({ id: walletId, user_id: id, balance: 0 });
+    });
+
+    const token = jwt.sign({ userId: id }, config.jwtSecret, {
+      expiresIn: "7d",
+    });
+    return { user: { id, name: payload.name, email: payload.email }, token };
+  }
 }
