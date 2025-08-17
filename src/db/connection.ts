@@ -18,12 +18,19 @@ async function createConnection(retries = MAX_RETRIES): Promise<Knex> {
         user: config.db.user,
         password: config.db.password,
         database: config.db.database,
-        ssl: process.env.DB_SSL === "true" ? {} : undefined,
+        ssl:
+          process.env.NODE_ENV === "production"
+            ? {
+                rejectUnauthorized: true,
+                ca: process.env.DB_CA_CERT,
+              }
+            : undefined,
       },
-      pool: { min: 0, max: 7 },
-      migrations: {
-        directory: "./migrations",
-        tableName: "knex_migrations",
+      pool: {
+        min: 0,
+        max: 7,
+        acquireTimeoutMillis: 30000,
+        createTimeoutMillis: 30000,
       },
     });
 

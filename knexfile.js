@@ -1,5 +1,14 @@
 require("dotenv").config();
 
+const sslConfig = {
+  development: false,
+  test: false,
+  production: {
+    rejectUnauthorized: true,
+    ca: process.env.DB_CA_CERT || undefined,
+  },
+};
+
 module.exports = {
   development: {
     client: "mysql2",
@@ -9,6 +18,7 @@ module.exports = {
       user: process.env.DB_USER || "6ixthedev",
       password: process.env.DB_PASSWORD || "p@ssw0rd",
       database: process.env.DB_NAME || "6ixwallet",
+      ssl: sslConfig.development,
     },
     migrations: {
       directory: "./migrations",
@@ -17,6 +27,7 @@ module.exports = {
       directory: "./seeds",
     },
   },
+
   test: {
     client: "mysql2",
     connection: {
@@ -25,11 +36,13 @@ module.exports = {
       user: process.env.DB_USER || "6ixthedev",
       password: process.env.DB_PASSWORD || "p@ssw0rd",
       database: process.env.DB_NAME || "6ixwallet",
+      ssl: sslConfig.test,
     },
     migrations: {
       directory: "./migrations",
     },
   },
+
   production: {
     client: "mysql2",
     connection: {
@@ -38,11 +51,26 @@ module.exports = {
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME || "defaultdb",
-      ssl: process.env.DB_SSL === "true" ? {} : undefined,
+      ssl: sslConfig.production,
+      typeCast: function (field, next) {
+        if (field.type === "TINY" && field.length === 1) {
+          return field.string() === "1";
+        }
+        return next();
+      },
     },
     pool: {
       min: 2,
       max: 10,
+      // Add acquire timeout and connection timeout
+      acquireTimeoutMillis: 30000,
+      createTimeoutMillis: 30000,
+      // Add error handling
+      afterCreate: (conn, done) => {
+        conn.query('SET time_zone = "UTC";', (err) => {
+          done(err, conn);
+        });
+      },
     },
     migrations: {
       directory: "./migrations",
