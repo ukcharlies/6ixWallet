@@ -6,7 +6,7 @@
   "scripts": {
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "dev": "nodemon --watch src --ext ts --exec \"ts-node src/index.ts\"",
-    "build": "tsc && cross-env NODE_ENV=production npm run migrate",
+    "build": "tsc && npm run migrate",
     "wait-db": "node ./seeds/wait-for-mysql.js",
     "setup-test-db": "node ./scripts/setup-test-db.js",
     "migrate": "knex migrate:latest --knexfile ./knexfile.js",
