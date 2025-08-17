@@ -37,14 +37,16 @@ module.exports = {
       port: process.env.DB_PORT || 3306,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-    },
-    migrations: {
-      directory: "./migrations",
+      database: process.env.DB_NAME || "defaultdb",
+      ssl: process.env.DB_SSL === "true" ? {} : undefined,
     },
     pool: {
       min: 2,
       max: 10,
+    },
+    migrations: {
+      directory: "./migrations",
+      tableName: "knex_migrations",
     },
   },
 };

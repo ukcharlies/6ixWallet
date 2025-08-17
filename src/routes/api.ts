@@ -6,6 +6,7 @@ import authMiddleware from "../middlewares/auth.middleware";
 import { validate } from "../middlewares/validation.middleware";
 import AuthService from "../services/auth.service";
 import { Request, Response, NextFunction } from "express";
+import db from "../db/knex";
 
 const router = Router();
 
@@ -101,5 +102,15 @@ router.post(
   WalletController.withdraw
 );
 router.get("/wallet/transactions", WalletController.getTransactions);
+
+// Add to your existing routes
+router.get("/health", async (req, res) => {
+  try {
+    await db.raw("SELECT 1");
+    res.status(200).json({ status: "healthy", database: "connected" });
+  } catch (error) {
+    res.status(500).json({ status: "unhealthy", database: "disconnected" });
+  }
+});
 
 export default router;

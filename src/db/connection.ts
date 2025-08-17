@@ -18,13 +18,29 @@ async function createConnection(retries = MAX_RETRIES): Promise<Knex> {
         user: config.db.user,
         password: config.db.password,
         database: config.db.database,
+        ssl: process.env.DB_SSL === "true" ? {} : undefined,
       },
       pool: { min: 0, max: 7 },
+      migrations: {
+        directory: "./migrations",
+        tableName: "knex_migrations",
+      },
     });
 
     // Test the connection
     await connection.raw("SELECT 1");
     console.log("Database connection established successfully");
+
+    // Ensure migrations table exists
+    const [hasMigrationsTable] = await connection.raw(
+      "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'knex_migrations')"
+    );
+
+    if (!hasMigrationsTable) {
+      console.log("Running initial migrations...");
+      await connection.migrate.latest();
+    }
+
     return connection;
   } catch (error) {
     console.error(`Database connection failed:`, error);
@@ -39,28 +55,8 @@ async function createConnection(retries = MAX_RETRIES): Promise<Knex> {
       return createConnection(retries - 1);
     }
 
-    if (config.env === "production") {
-      console.log(
-        "Using in-memory mock database for production when DB connection fails"
-      );
-      return createMockDatabase();
-    }
-
     throw error;
   }
-}
-
-function createMockDatabase(): Knex {
-  // Simple in-memory database for when real connection fails in production
-  // This is a fallback to prevent complete app failure
-  console.log("WARNING: Using mock database - data will not persist!");
-  return knex({
-    client: "better-sqlite3",
-    connection: {
-      filename: ":memory:",
-    },
-    useNullAsDefault: true,
-  });
 }
 
 export default createConnection;
