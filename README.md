@@ -54,6 +54,8 @@ Client → API Routes → Controllers → Services → Data Access (Knex) → Da
 
 ### Entity-Relationship Diagram
 
+-[link to ERD](https://dbdesigner.page.link/zMDmbHSLqx3qfzJQA)
+
 ```
 ┌──────────┐ ┌──────────┐ ┌──────────────┐
 │  Users   │ │ Wallets  │ │ Transactions │
